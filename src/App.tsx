@@ -8,11 +8,12 @@ import { PDFViewer } from "@components/modules/pdfViewer";
 import { ViewerController } from "@components/modules/viewerController";
 import { ChatDataType } from "@customTypes/chatData";
 import { PDFType } from "@customTypes/pdf";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useChatData } from "./hooks/useChatData";
 
 import test1 from "@assets/test1.pdf";
 import test2 from "@assets/test2.pdf";
+import { SearchContent } from "@components/common/SearchContent";
 
 function App() {
   const { getChatData, saveChatData, deleteChatData } = useChatData();
@@ -25,23 +26,17 @@ function App() {
 
   const onSubmit = async (message: string) => {
     // ユーザーのメッセージを追加
-    const newMessageFromUser = chatData.concat({
-      writer: "user",
-      message: message,
-      links: [],
-    });
-    setChatData(newMessageFromUser);
-    saveChatData(newMessageFromUser);
+    setChatData((data) => [
+      ...data,
+      { writer: "user", message: message, links: [] },
+    ]);
 
     // api通信
     // botの返答追加
-    const newMessageFromBot = newMessageFromUser.concat({
-      writer: "bot",
-      message: "こんにちは",
-      links: [test1, test2],
-    });
-    setChatData(newMessageFromBot);
-    saveChatData(newMessageFromBot);
+    setChatData((data) => [
+      ...data,
+      { writer: "bot", message: "こんにちは", links: [test1, test2] },
+    ]);
   };
 
   const onClickPDFLink = (pdf: PDFType) => {
@@ -53,6 +48,10 @@ function App() {
     setChatData([]);
     setPDFFile({ link: "", fileName: "" });
   };
+
+  useEffect(() => {
+    saveChatData(chatData);
+  }, [chatData, saveChatData]);
 
   const SwitchMessage = (chatData: ChatDataType, index: number) => {
     if (chatData.writer === "user") {
@@ -79,6 +78,8 @@ function App() {
             </div>
             <div className="flex h-96 grow flex-col gap-2 overflow-y-scroll">
               {chatData.map((data, index) => SwitchMessage(data, index))}
+              <SearchContent />
+              <SearchContent />
             </div>
             <Divider />
             <div className="px-3 py-6">
